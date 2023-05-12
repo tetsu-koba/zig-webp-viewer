@@ -87,5 +87,6 @@ pub fn main() anyerror!void {
             sdl.SDL_RenderPresent(renderer);
             resize_time = 0;
         }
+        std.time.sleep(100 * std.time.ns_per_ms);
     }
 }
