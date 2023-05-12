@@ -13,7 +13,7 @@ pub fn main() anyerror!void {
     const alc = std.heap.page_allocator;
     const args = try std.process.argsAlloc(alc);
     defer std.process.argsFree(alc, args);
-    
+
     if (args.len < 2) {
         std.debug.print("Usage: {s} <image.webp>\n", .{args[0]});
         std.os.exit(1);
@@ -22,7 +22,7 @@ pub fn main() anyerror!void {
     var file1 = try std.fs.cwd().openFile(args[1], .{});
     defer file1.close();
     const image_data = try file1.readToEndAlloc(alc, 4 * 1024 * 1024 * 1024);
-    
+
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
         log.err("SDL could not initialize! SDL_Error: {s}", .{sdl.SDL_GetError()});
         return;
@@ -47,7 +47,7 @@ pub fn main() anyerror!void {
     defer sdl.SDL_DestroyRenderer(renderer);
 
     var surface = sdl.SDL_CreateRGBSurfaceFrom(image.pixels.ptr, @intCast(c_int, image.width), @intCast(c_int, image.height), 32, @intCast(c_int, image.width * 4), 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-    
+
     if (surface == null) {
         log.err("Unable to create surface! SDL_Error: {s}", .{sdl.SDL_GetError()});
         return;
@@ -81,7 +81,7 @@ pub fn main() anyerror!void {
             var w: c_int = 0;
             var h: c_int = 0;
             sdl.SDL_GetWindowSize(window, &w, &h);
-            var render_quad = sdl.SDL_Rect { .x = 0, .y = 0, .w = w, .h = h };
+            var render_quad = sdl.SDL_Rect{ .x = 0, .y = 0, .w = w, .h = h };
             _ = sdl.SDL_RenderClear(renderer);
             _ = sdl.SDL_RenderCopy(renderer, texture, null, &render_quad);
             sdl.SDL_RenderPresent(renderer);

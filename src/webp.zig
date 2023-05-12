@@ -34,7 +34,7 @@ pub fn decodeRGBA(data: []const u8) ImageData {
     var width: usize = 0;
     var height: usize = 0;
     const pixels = WebPDecodeRGBA(data.ptr, data.len, &width, &height);
-    return ImageData{ .width = width, .height = height, .pixels = pixels[0..width * height * 4] };
+    return ImageData{ .width = width, .height = height, .pixels = pixels[0 .. width * height * 4] };
 }
 
 pub fn free(pointer: []u8) void {
