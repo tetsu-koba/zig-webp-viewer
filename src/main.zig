@@ -84,9 +84,9 @@ pub fn main() anyerror!void {
             var render_width = @intCast(c_int, @intCast(u64, h) * @intCast(u64, image.width) / @intCast(u64, image.height));
             var render_height = @intCast(c_int, @intCast(u64, w) * @intCast(u64, image.height) / @intCast(u64, image.width));
             if (render_width > w) {
-	        render_width = @intCast(c_int, w);
+                render_width = @intCast(c_int, w);
             } else {
-	        render_height = @intCast(c_int, h);
+                render_height = @intCast(c_int, h);
             }
             var render_quad = sdl.SDL_Rect{
                 .x = @divTrunc(w - render_width, 2),
