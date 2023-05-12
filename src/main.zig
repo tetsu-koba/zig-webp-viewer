@@ -19,8 +19,6 @@ pub fn main() anyerror!void {
         std.os.exit(1);
     }
 
-    //const image_data = try std.fs.readFileAlloc(alc, args[1]);
-    //defer alc.free(image_data);
     var file1 = try std.fs.cwd().openFile(args[1], .{});
     defer file1.close();
     const image_data = try file1.readToEndAlloc(alc, 4 * 1024 * 1024 * 1024);
@@ -31,8 +29,6 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_Quit();
 
-    //const (width, height, pixels) = webp.decodeRGBA(image_data);
-    //defer webp.free(pixels);
     const image = webp.decodeRGBA(image_data);
     defer webp.free(image.pixels);
 
@@ -73,7 +69,6 @@ pub fn main() anyerror!void {
             switch (event.type) {
                 sdl.SDL_QUIT => quit = true,
                 sdl.SDL_WINDOWEVENT => |windowEvent| {
-                    //switch (windowEvent.window.event) {
                     switch (windowEvent) {
                         sdl.SDL_WINDOWEVENT_RESIZED => resize_time = sdl.SDL_GetTicks(),
                         else => {},
