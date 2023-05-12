@@ -81,7 +81,19 @@ pub fn main() anyerror!void {
             var w: c_int = 0;
             var h: c_int = 0;
             sdl.SDL_GetWindowSize(window, &w, &h);
-            var render_quad = sdl.SDL_Rect{ .x = 0, .y = 0, .w = w, .h = h };
+            var render_width = @intCast(c_int, @intCast(u64, h) * @intCast(u64, image.width) / @intCast(u64, image.height));
+            var render_height = @intCast(c_int, @intCast(u64, w) * @intCast(u64, image.height) / @intCast(u64, image.width));
+            if (render_width > w) {
+	        render_width = @intCast(c_int, w);
+            } else {
+	        render_height = @intCast(c_int, h);
+            }
+            var render_quad = sdl.SDL_Rect{
+                .x = @divTrunc(w - render_width, 2),
+                .y = @divTrunc(h - render_height, 2),
+                .w = render_width,
+                .h = render_height,
+            };
             _ = sdl.SDL_RenderClear(renderer);
             _ = sdl.SDL_RenderCopy(renderer, texture, null, &render_quad);
             sdl.SDL_RenderPresent(renderer);
