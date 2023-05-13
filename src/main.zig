@@ -83,7 +83,7 @@ pub fn main() anyerror!void {
     var resize_time: u32 = 0;
     while (!quit) {
         var event: sdl.SDL_Event = undefined;
-        while (sdl.SDL_PollEvent(&event) != 0) {
+        while (sdl.SDL_WaitEventTimeout(&event, 100) != 0) {
             switch (event.type) {
                 sdl.SDL_QUIT => quit = true,
                 sdl.SDL_WINDOWEVENT => |windowEvent| {
@@ -117,6 +117,5 @@ pub fn main() anyerror!void {
             sdl.SDL_RenderPresent(renderer);
             resize_time = 0;
         }
-        std.time.sleep(100 * std.time.ns_per_ms);
     }
 }
