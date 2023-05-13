@@ -5,10 +5,6 @@ const sdl = @cImport({
     @cInclude("SDL2/SDL.h");
 });
 
-pub const SCREEN_WIDTH: c_int = 800;
-pub const SCREEN_HEIGHT: c_int = 600;
-pub const RESIZE_INTERVAL_MS: u32 = 100;
-
 pub fn main() anyerror!void {
     const alc = std.heap.page_allocator;
     const args = try std.process.argsAlloc(alc);
@@ -84,23 +80,30 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_DestroyTexture(texture);
 
+    _ = sdl.SDL_RenderClear(renderer);
+    _ = sdl.SDL_RenderCopy(renderer, texture, null, &sdl.SDL_Rect{ .x = 0, .y = 0, .w = @intCast(c_int, window_width), .h = @intCast(c_int, window_height) });
+    sdl.SDL_RenderPresent(renderer);
+
     var quit = false;
-    var resize_time: u32 = 0;
     while (!quit) {
+        var resized = false;
         var event: sdl.SDL_Event = undefined;
         while (sdl.SDL_WaitEventTimeout(&event, 100) != 0) {
             switch (event.type) {
-                sdl.SDL_QUIT => quit = true,
-                sdl.SDL_WINDOWEVENT => |windowEvent| {
-                    switch (windowEvent) {
-                        sdl.SDL_WINDOWEVENT_RESIZED => resize_time = sdl.SDL_GetTicks(),
-                        else => {},
+                sdl.SDL_QUIT => {
+                    quit = true;
+                    break;
+                },
+                sdl.SDL_WINDOWEVENT => {
+                    if (event.window.event == sdl.SDL_WINDOWEVENT_RESIZED) {
+                        resized = true;
+                        log.info("width={d}, height={d}", .{ event.window.data1, event.window.data2 });
                     }
                 },
                 else => {},
             }
         }
-        if (sdl.SDL_GetTicks() - resize_time > RESIZE_INTERVAL_MS) {
+        if (resized) {
             var w: c_int = 0;
             var h: c_int = 0;
             sdl.SDL_GetWindowSize(window, &w, &h);
@@ -120,7 +123,6 @@ pub fn main() anyerror!void {
             _ = sdl.SDL_RenderClear(renderer);
             _ = sdl.SDL_RenderCopy(renderer, texture, null, &render_quad);
             sdl.SDL_RenderPresent(renderer);
-            resize_time = 0;
         }
     }
 }
