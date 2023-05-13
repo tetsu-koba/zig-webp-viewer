@@ -22,7 +22,24 @@ jobs:
         with:
           packages: libwebp-dev libsdl2-dev
           version: 1.0
-      - run: zig build -Doptimize=${{ matrix.optimize }} 
+      - run: zig build -Doptimize=${{ matrix.optimize }}
+  test_on_mac:
+    strategy:
+      matrix:
+        optimize: [Debug, ReleaseSafe, ReleaseFast, ReleaseSmall]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: goto-bus-stop/setup-zig@v2.0.1
+        with:
+          version: master
+      - name: Install libs
+        run: |
+          brew update
+          brew install webp sdl2
+      - run: zig build -Doptimize=${{ matrix.optimize }}
   lint:
     runs-on: ubuntu-latest
     steps:
