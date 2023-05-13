@@ -49,14 +49,14 @@ pub fn main() anyerror!void {
 
     const w0 = if (screen_width < image.width) screen_width else image.width;
     const h0 = if (screen_height < image.height) screen_height else image.height;
-    var window_width = @intCast(u64, h0) * @intCast(u64, image.width) / @intCast(u64, image.height);
-    var window_height = @intCast(u64, w0) * @intCast(u64, image.height) / @intCast(u64, image.width);
+    var window_width = @intCast(c_int, @intCast(u64, h0) * @intCast(u64, image.width) / @intCast(u64, image.height));
+    var window_height = @intCast(c_int, @intCast(u64, w0) * @intCast(u64, image.height) / @intCast(u64, image.width));
     if (window_width > w0) {
-        window_width = w0;
+        window_width = @intCast(c_int, w0);
     } else {
-        window_height = h0;
+        window_height = @intCast(c_int, h0);
     }
-    _ = sdl.SDL_SetWindowSize(window, @intCast(c_int, window_width), @intCast(c_int, window_height));
+    _ = sdl.SDL_SetWindowSize(window, window_width, window_height);
 
     var renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
     if (renderer == null) {
@@ -81,7 +81,7 @@ pub fn main() anyerror!void {
     defer sdl.SDL_DestroyTexture(texture);
 
     _ = sdl.SDL_RenderClear(renderer);
-    _ = sdl.SDL_RenderCopy(renderer, texture, null, &sdl.SDL_Rect{ .x = 0, .y = 0, .w = @intCast(c_int, window_width), .h = @intCast(c_int, window_height) });
+    _ = sdl.SDL_RenderCopy(renderer, texture, null, &sdl.SDL_Rect{ .x = 0, .y = 0, .w = window_width, .h = window_height });
     sdl.SDL_RenderPresent(renderer);
 
     var quit = false;
@@ -97,26 +97,25 @@ pub fn main() anyerror!void {
                 sdl.SDL_WINDOWEVENT => {
                     if (event.window.event == sdl.SDL_WINDOWEVENT_RESIZED) {
                         resized = true;
-                        log.info("width={d}, height={d}", .{ event.window.data1, event.window.data2 });
+                        log.info("resize: width={d}, height={d}", .{ event.window.data1, event.window.data2 });
+                        window_width = event.window.data1;
+                        window_height = event.window.data2;
                     }
                 },
                 else => {},
             }
         }
         if (resized) {
-            var w: c_int = 0;
-            var h: c_int = 0;
-            sdl.SDL_GetWindowSize(window, &w, &h);
-            var render_width = @intCast(c_int, @intCast(u64, h) * @intCast(u64, image.width) / @intCast(u64, image.height));
-            var render_height = @intCast(c_int, @intCast(u64, w) * @intCast(u64, image.height) / @intCast(u64, image.width));
-            if (render_width > w) {
-                render_width = @intCast(c_int, w);
+            var render_width = @intCast(c_int, @intCast(u64, window_height) * @intCast(u64, image.width) / @intCast(u64, image.height));
+            var render_height = @intCast(c_int, @intCast(u64, window_width) * @intCast(u64, image.height) / @intCast(u64, image.width));
+            if (render_width > window_width) {
+                render_width = window_width;
             } else {
-                render_height = @intCast(c_int, h);
+                render_height = window_height;
             }
             var render_quad = sdl.SDL_Rect{
-                .x = @divTrunc(w - render_width, 2),
-                .y = @divTrunc(h - render_height, 2),
+                .x = @divTrunc(window_width - render_width, 2),
+                .y = @divTrunc(window_height - render_height, 2),
                 .w = render_width,
                 .h = render_height,
             };
