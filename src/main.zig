@@ -29,14 +29,24 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_Quit();
 
-    // Get screen size
-    var dm: sdl.SDL_DisplayMode = undefined;
-    if (sdl.SDL_GetCurrentDisplayMode(0, &dm) != 0) {
-        log.err("SDL could get display mode! SDL_Error: {s}", .{sdl.SDL_GetError()});
+    // Create window in temporary size
+    var window = sdl.SDL_CreateWindow("WebP Display", sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, 1, 1, sdl.SDL_WINDOW_RESIZABLE);
+    if (window == null) {
+        log.err("Window could not be created! SDL_Error: {s}", .{sdl.SDL_GetError()});
         return;
     }
-    const screen_width = @intCast(usize, dm.w);
-    const screen_height = @intCast(usize, dm.h);
+    defer sdl.SDL_DestroyWindow(window);
+
+    // Get screen size
+    const display_index = sdl.SDL_GetWindowDisplayIndex(window);
+    var rect: sdl.SDL_Rect = undefined;
+    if (sdl.SDL_GetDisplayUsableBounds(display_index, &rect) != 0) {
+        log.err("SDL could get display usable bounds! SDL_Error: {s}", .{sdl.SDL_GetError()});
+        return;
+    }
+
+    const screen_width = @intCast(usize, rect.w);
+    const screen_height = @intCast(usize, rect.h);
 
     const image = webp.decodeRGBA(image_data);
     defer webp.free(image.pixels);
@@ -50,12 +60,7 @@ pub fn main() anyerror!void {
     } else {
         window_height = h0;
     }
-    var window = sdl.SDL_CreateWindow("WebP Display", sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, @intCast(c_int, window_width), @intCast(c_int, window_height), sdl.SDL_WINDOW_RESIZABLE);
-    if (window == null) {
-        log.err("Window could not be created! SDL_Error: {s}", .{sdl.SDL_GetError()});
-        return;
-    }
-    defer sdl.SDL_DestroyWindow(window);
+    _ = sdl.SDL_SetWindowSize(window, @intCast(c_int, window_width), @intCast(c_int, window_height));
 
     var renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
     if (renderer == null) {
