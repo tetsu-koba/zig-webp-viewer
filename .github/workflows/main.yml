@@ -6,12 +6,11 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  test:
+  test_on_linux:
     strategy:
       matrix:
-        os: [ubuntu-latest]
         optimize: [Debug, ReleaseSafe, ReleaseFast, ReleaseSmall]
-    runs-on: ${{matrix.os}}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
