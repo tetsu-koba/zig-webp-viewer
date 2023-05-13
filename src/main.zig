@@ -57,6 +57,7 @@ pub fn main() anyerror!void {
         window_height = @intCast(c_int, h0);
     }
     _ = sdl.SDL_SetWindowSize(window, window_width, window_height);
+    sdl.SDL_SetWindowPosition(window, @divTrunc(@intCast(c_int, screen_width) - window_width, 2), @divTrunc(@intCast(c_int, screen_height) - window_height, 2));
 
     var renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
     if (renderer == null) {
