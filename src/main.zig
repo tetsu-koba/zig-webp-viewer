@@ -56,7 +56,7 @@ pub fn main() anyerror!void {
     } else {
         window_height = @intCast(c_int, h0);
     }
-    _ = sdl.SDL_SetWindowSize(window, window_width, window_height);
+    sdl.SDL_SetWindowSize(window, window_width, window_height);
     sdl.SDL_SetWindowPosition(window, @divTrunc(@intCast(c_int, screen_width) - window_width, 2), @divTrunc(@intCast(c_int, screen_height) - window_height, 2));
 
     var renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
@@ -101,6 +101,16 @@ pub fn main() anyerror!void {
                         log.info("resize: width={d}, height={d}", .{ event.window.data1, event.window.data2 });
                         window_width = event.window.data1;
                         window_height = event.window.data2;
+                    }
+                },
+                sdl.SDL_KEYUP => {
+                    switch (event.key.keysym.sym) {
+                        sdl.SDLK_SPACE => {},
+                        sdl.SDLK_q => {
+                            quit = true;
+                            break;
+                        },
+                        else => {},
                     }
                 },
                 else => {},
