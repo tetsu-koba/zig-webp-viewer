@@ -29,10 +29,28 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_Quit();
 
+    // Get screen size
+    var dm: sdl.SDL_DisplayMode = undefined;
+    if (sdl.SDL_GetCurrentDisplayMode(0, &dm) != 0) {
+        log.err("SDL could get display mode! SDL_Error: {s}", .{sdl.SDL_GetError()});
+        return;
+    }
+    const screen_width = @intCast(usize, dm.w);
+    const screen_height = @intCast(usize, dm.h);
+
     const image = webp.decodeRGBA(image_data);
     defer webp.free(image.pixels);
 
-    var window = sdl.SDL_CreateWindow("WebP Display", sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, sdl.SDL_WINDOW_RESIZABLE);
+    const w0 = if (screen_width < image.width) screen_width else image.width;
+    const h0 = if (screen_height < image.height) screen_height else image.height;
+    var window_width = @intCast(u64, h0) * @intCast(u64, image.width) / @intCast(u64, image.height);
+    var window_height = @intCast(u64, w0) * @intCast(u64, image.height) / @intCast(u64, image.width);
+    if (window_width > w0) {
+        window_width = w0;
+    } else {
+        window_height = h0;
+    }
+    var window = sdl.SDL_CreateWindow("WebP Display", sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, @intCast(c_int, window_width), @intCast(c_int, window_height), sdl.SDL_WINDOW_RESIZABLE);
     if (window == null) {
         log.err("Window could not be created! SDL_Error: {s}", .{sdl.SDL_GetError()});
         return;
