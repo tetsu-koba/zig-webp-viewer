@@ -13,14 +13,14 @@ extern fn WebPDecodeRGBA(data: [*]const u8, data_size: usize, width: *usize, hei
 extern fn WebPFree(pointer: *u8) void;
 
 pub const ImageInfo = struct {
-    width: usize,
-    height: usize,
+    width: usize = 0,
+    height: usize = 0,
 };
 
 pub const ImageData = struct {
-    width: usize,
-    height: usize,
-    pixels: []u8,
+    width: usize = 0,
+    height: usize = 0,
+    pixels: []u8 = "",
 };
 
 pub fn getInfo(data: []const u8) ImageInfo {
