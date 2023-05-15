@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
@@ -26,8 +27,22 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC();
     exe.linkSystemLibrary("SDL2");
     exe.linkSystemLibrary("webp");
-    exe.addIncludePath("/opt/homebrew/include");
-    exe.addLibraryPath("/opt/homebrew/lib");
+    switch (builtin.os.tag) {
+        .macos => {
+            switch (builtin.cpu.arch) {
+                .aarch64 => {
+                    exe.addIncludePath("/opt/homebrew/include");
+                    exe.addLibraryPath("/opt/homebrew/lib");
+                },
+                .x86_64 => {
+                    exe.addIncludePath("/usr/local/include");
+                    exe.addLibraryPath("/usr/local/lib");
+                },
+                else => {},
+            }
+        },
+        else => {},
+    }
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
