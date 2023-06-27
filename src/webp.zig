@@ -38,5 +38,5 @@ pub fn decodeRGBA(data: []const u8) ImageData {
 }
 
 pub fn free(pointer: []u8) void {
-    WebPFree(@ptrCast(*u8, pointer.ptr));
+    WebPFree(@ptrCast(pointer.ptr));
 }

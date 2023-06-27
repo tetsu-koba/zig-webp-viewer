@@ -71,8 +71,8 @@ pub const ImageViewer = struct {
             return error.SDL;
         }
 
-        self.screen_width = @intCast(usize, rect.w);
-        self.screen_height = @intCast(usize, rect.h);
+        self.screen_width = @intCast(rect.w);
+        self.screen_height = @intCast(rect.h);
 
         try self.loadImage();
 
@@ -99,17 +99,17 @@ pub const ImageViewer = struct {
 
         const w0 = if (self.screen_width < image.width) self.screen_width else image.width;
         const h0 = if (self.screen_height < image.height) self.screen_height else image.height;
-        var window_width = @intCast(c_int, @intCast(u64, h0) * @intCast(u64, image.width) / @intCast(u64, image.height));
-        var window_height = @intCast(c_int, @intCast(u64, w0) * @intCast(u64, image.height) / @intCast(u64, image.width));
+        var window_width: c_int = @intCast(@as(u64, @intCast(h0)) * @as(u64, @intCast(image.width)) / @as(u64, @intCast(image.height)));
+        var window_height: c_int = @intCast(@as(u64, @intCast(w0)) * @as(u64, @intCast(image.height)) / @as(u64, @intCast(image.width)));
         if (window_width > w0) {
-            window_width = @intCast(c_int, w0);
+            window_width = @intCast(w0);
         } else {
-            window_height = @intCast(c_int, h0);
+            window_height = @intCast(h0);
         }
         self.window_width = window_width;
         self.window_height = window_height;
         sdl.SDL_SetWindowSize(self.window, window_width, window_height);
-        sdl.SDL_SetWindowPosition(self.window, @divTrunc(@intCast(c_int, self.screen_width) - window_width, 2), @divTrunc(@intCast(c_int, self.screen_height) - window_height, 2));
+        sdl.SDL_SetWindowPosition(self.window, @divTrunc(@as(c_int, @intCast(self.screen_width)) - window_width, 2), @divTrunc(@as(c_int, @intCast(self.screen_height)) - window_height, 2));
 
         if (self.renderer != null) sdl.SDL_DestroyRenderer(self.renderer);
         self.renderer = sdl.SDL_CreateRenderer(self.window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
@@ -119,7 +119,7 @@ pub const ImageViewer = struct {
         }
 
         if (self.surface != null) sdl.SDL_FreeSurface(self.surface);
-        self.surface = sdl.SDL_CreateRGBSurfaceFrom(image.pixels.ptr, @intCast(c_int, image.width), @intCast(c_int, image.height), 32, @intCast(c_int, image.width * 4), 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        self.surface = sdl.SDL_CreateRGBSurfaceFrom(image.pixels.ptr, @intCast(image.width), @intCast(image.height), 32, @intCast(image.width * 4), 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
         if (self.surface == null) {
             log.err("Unable to create surface! SDL_Error: {s}", .{sdl.SDL_GetError()});
@@ -182,8 +182,8 @@ pub const ImageViewer = struct {
             if (repaint) {
                 const window_width = self.window_width;
                 const window_height = self.window_height;
-                var render_width = @intCast(c_int, @intCast(u64, window_height) * @intCast(u64, self.image.width) / @intCast(u64, self.image.height));
-                var render_height = @intCast(c_int, @intCast(u64, window_width) * @intCast(u64, self.image.height) / @intCast(u64, self.image.width));
+                var render_width = @as(c_int, @intCast(@as(u64, @intCast(window_height)) * @as(u64, @intCast(self.image.width)) / @as(u64, @intCast(self.image.height))));
+                var render_height = @as(c_int, @intCast(@as(u64, @intCast(window_width)) * @as(u64, @intCast(self.image.height)) / @as(u64, @intCast(self.image.width))));
                 if (render_width > window_width) {
                     render_width = window_width;
                 } else {
