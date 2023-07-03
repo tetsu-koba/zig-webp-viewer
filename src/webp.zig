@@ -2,11 +2,6 @@ const std = @import("std");
 const webp = @cImport({
     @cInclude("webp/decode.h");
 });
-pub const Decoder = webp.WebPIDecoder;
-pub const DecoderOptions = webp.WebPDecoderConfig;
-pub const DecoderBuffer = webp.WebPDecBuffer;
-pub const DecoderMode = webp.WEBP_CSP_MODE;
-pub const ImageFormat = webp.WebPInputFileFormat;
 
 extern fn WebPGetInfo(data: [*]const u8, data_size: usize, width: *usize, height: *usize) u32;
 extern fn WebPDecodeRGBA(data: [*]const u8, data_size: usize, width: *usize, height: *usize) [*]u8;
@@ -34,10 +29,12 @@ pub const ImageData = struct {
     }
 };
 
-pub fn getInfo(data: []const u8) ImageInfo {
+pub fn getInfo(data: []const u8) !ImageInfo {
     var width: usize = 0;
     var height: usize = 0;
-    _ = WebPGetInfo(data.ptr, data.len, &width, &height);
+    if (WebPGetInfo(data.ptr, data.len, &width, &height) == 0) {
+        return error.WebPFormatError;
+    }
     return ImageInfo{ .width = width, .height = height };
 }
 
