@@ -87,13 +87,13 @@ pub const ImageViewer = struct {
         if (self.texture != null) sdl.SDL_DestroyTexture(self.texture);
         if (self.surface != null) sdl.SDL_FreeSurface(self.surface);
         if (self.renderer != null) sdl.SDL_DestroyRenderer(self.renderer);
-        if (self.image.pixels.len != 0) webp.free(self.image.pixels);
+        self.image.free();
         if (self.window != null) sdl.SDL_DestroyWindow(self.window);
         sdl.SDL_Quit();
     }
 
     fn loadImage(self: *Self) !void {
-        if (self.image.pixels.len != 0) webp.free(self.image.pixels);
+        self.image.free();
         self.image = try decodeWebp(self.alc, self.files[self.file_index]);
         const image = self.image;
 

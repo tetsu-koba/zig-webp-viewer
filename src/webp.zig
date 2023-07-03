@@ -21,6 +21,17 @@ pub const ImageData = struct {
     width: usize = 0,
     height: usize = 0,
     pixels: []u8 = "",
+
+    const Self = @This();
+
+    pub fn free(self: *Self) void {
+        if (self.pixels.len != 0) {
+            WebPFree(@ptrCast(self.pixels.ptr));
+            self.pixels = "";
+            self.width = 0;
+            self.height = 0;
+        }
+    }
 };
 
 pub fn getInfo(data: []const u8) ImageInfo {
@@ -35,8 +46,4 @@ pub fn decodeRGBA(data: []const u8) ImageData {
     var height: usize = 0;
     const pixels = WebPDecodeRGBA(data.ptr, data.len, &width, &height);
     return ImageData{ .width = width, .height = height, .pixels = pixels[0 .. width * height * 4] };
-}
-
-pub fn free(pointer: []u8) void {
-    WebPFree(@ptrCast(pointer.ptr));
 }
