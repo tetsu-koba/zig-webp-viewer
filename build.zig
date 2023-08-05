@@ -31,12 +31,12 @@ pub fn build(b: *std.Build) void {
         .macos => {
             switch (builtin.cpu.arch) {
                 .aarch64 => {
-                    exe.addIncludePath("/opt/homebrew/include");
-                    exe.addLibraryPath("/opt/homebrew/lib");
+                    exe.addIncludePath(.{ .path = "/opt/homebrew/include" });
+                    exe.addLibraryPath(.{ .path = "/opt/homebrew/lib" });
                 },
                 .x86_64 => {
-                    exe.addIncludePath("/usr/local/include");
-                    exe.addLibraryPath("/usr/local/lib");
+                    exe.addIncludePath(.{ .path = "/usr/local/include" });
+                    exe.addLibraryPath(.{ .path = "/usr/local/lib" });
                 },
                 else => {},
             }
