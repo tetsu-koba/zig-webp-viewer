@@ -12,7 +12,7 @@ pub fn main() !void {
 
     if (args.len < 2) {
         std.debug.print("Usage: {s} image.webp...\n", .{args[0]});
-        std.os.exit(1);
+        std.posix.exit(1);
     }
     var image_viewer = try ImageViewer.init(alc, args[1..]);
     defer image_viewer.deinit();
