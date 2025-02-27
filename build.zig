@@ -37,7 +37,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     exe.linkLibC();
-    exe.linkSystemLibrary("SDL2");
+    exe.linkSystemLibrary("SDL3");
     exe.linkSystemLibrary("webp");
     switch (builtin.os.tag) {
         .macos => {

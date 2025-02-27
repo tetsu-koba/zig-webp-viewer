@@ -2,7 +2,7 @@ const std = @import("std");
 const log = std.log;
 const webp = @import("webp.zig");
 const sdl = @cImport({
-    @cInclude("SDL2/SDL.h");
+    @cInclude("SDL3/SDL.h");
 });
 
 pub fn main() !void {
@@ -49,14 +49,14 @@ pub const ImageViewer = struct {
             .screen_width = 0,
             .screen_height = 0,
         };
-        if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
+        if (!sdl.SDL_Init(sdl.SDL_INIT_VIDEO)) {
             log.err("SDL could not initialize! SDL_Error: {s}", .{sdl.SDL_GetError()});
             return error.SDL;
         }
         errdefer sdl.SDL_Quit();
 
         // Create window in temporary size
-        self.window = sdl.SDL_CreateWindow("WebP Display", sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, 1, 1, sdl.SDL_WINDOW_RESIZABLE);
+        self.window = sdl.SDL_CreateWindow("WebP Display", 1, 1, sdl.SDL_WINDOW_RESIZABLE);
         if (self.window == null) {
             log.err("Window could not be created! SDL_Error: {s}", .{sdl.SDL_GetError()});
             return error.SDL;
@@ -64,9 +64,9 @@ pub const ImageViewer = struct {
         errdefer sdl.SDL_DestroyWindow(self.window);
 
         // Get screen size
-        const display_index = sdl.SDL_GetWindowDisplayIndex(self.window);
+        const display_index = sdl.SDL_GetDisplayForWindow(self.window);
         var rect: sdl.SDL_Rect = undefined;
-        if (sdl.SDL_GetDisplayUsableBounds(display_index, &rect) != 0) {
+        if (!sdl.SDL_GetDisplayUsableBounds(display_index, &rect)) {
             log.err("SDL could get display usable bounds! SDL_Error: {s}", .{sdl.SDL_GetError()});
             return error.SDL;
         }
@@ -77,15 +77,15 @@ pub const ImageViewer = struct {
         try self.loadImage();
 
         _ = sdl.SDL_RenderClear(self.renderer);
-        _ = sdl.SDL_RenderCopy(self.renderer, self.texture, null, &sdl.SDL_Rect{ .x = 0, .y = 0, .w = self.window_width, .h = self.window_height });
-        sdl.SDL_RenderPresent(self.renderer);
+        _ = sdl.SDL_RenderTexture(self.renderer, self.texture, null, &sdl.SDL_FRect{ .x = 0, .y = 0, .w = @floatFromInt(self.window_width), .h = @floatFromInt(self.window_height) });
+        _ = sdl.SDL_RenderPresent(self.renderer);
 
         return self;
     }
 
     pub fn deinit(self: *Self) void {
         if (self.texture != null) sdl.SDL_DestroyTexture(self.texture);
-        if (self.surface != null) sdl.SDL_FreeSurface(self.surface);
+        if (self.surface != null) sdl.SDL_DestroySurface(self.surface);
         if (self.renderer != null) sdl.SDL_DestroyRenderer(self.renderer);
         self.image.free();
         if (self.window != null) sdl.SDL_DestroyWindow(self.window);
@@ -108,18 +108,18 @@ pub const ImageViewer = struct {
         }
         self.window_width = window_width;
         self.window_height = window_height;
-        sdl.SDL_SetWindowSize(self.window, window_width, window_height);
-        sdl.SDL_SetWindowPosition(self.window, @divTrunc(@as(c_int, @intCast(self.screen_width)) - window_width, 2), @divTrunc(@as(c_int, @intCast(self.screen_height)) - window_height, 2));
+        _ = sdl.SDL_SetWindowSize(self.window, window_width, window_height);
+        _ = sdl.SDL_SetWindowPosition(self.window, @divTrunc(@as(c_int, @intCast(self.screen_width)) - window_width, 2), @divTrunc(@as(c_int, @intCast(self.screen_height)) - window_height, 2));
 
         if (self.renderer != null) sdl.SDL_DestroyRenderer(self.renderer);
-        self.renderer = sdl.SDL_CreateRenderer(self.window, -1, sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC);
+        self.renderer = sdl.SDL_CreateRenderer(self.window, null);
         if (self.renderer == null) {
             log.err("Renderer could not be created! SDL_Error: {s}", .{sdl.SDL_GetError()});
             return error.SDL;
         }
 
-        if (self.surface != null) sdl.SDL_FreeSurface(self.surface);
-        self.surface = sdl.SDL_CreateRGBSurfaceFrom(image.pixels.ptr, @intCast(image.width), @intCast(image.height), 32, @intCast(image.width * 4), 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        if (self.surface != null) sdl.SDL_DestroySurface(self.surface);
+        self.surface = sdl.SDL_CreateSurfaceFrom(@intCast(image.width), @intCast(image.height), sdl.SDL_GetPixelFormatForMasks(32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000), image.pixels.ptr, @intCast(image.width * 4));
 
         if (self.surface == null) {
             log.err("Unable to create surface! SDL_Error: {s}", .{sdl.SDL_GetError()});
@@ -139,22 +139,20 @@ pub const ImageViewer = struct {
         while (!quit) {
             var repaint = false;
             var event: sdl.SDL_Event = undefined;
-            while (sdl.SDL_WaitEventTimeout(&event, 100) != 0) {
+            while (sdl.SDL_WaitEventTimeout(&event, 100)) {
                 switch (event.type) {
-                    sdl.SDL_QUIT => {
+                    sdl.SDL_EVENT_QUIT => {
                         quit = true;
                         break;
                     },
-                    sdl.SDL_WINDOWEVENT => {
-                        if (event.window.event == sdl.SDL_WINDOWEVENT_RESIZED) {
-                            log.info("resize: width={d}, height={d}", .{ event.window.data1, event.window.data2 });
-                            self.window_width = event.window.data1;
-                            self.window_height = event.window.data2;
-                            repaint = true;
-                        }
+                    sdl.SDL_EVENT_WINDOW_RESIZED => {
+                        log.info("resize: width={d}, height={d}", .{ event.window.data1, event.window.data2 });
+                        self.window_width = event.window.data1;
+                        self.window_height = event.window.data2;
+                        repaint = true;
                     },
-                    sdl.SDL_KEYUP => {
-                        switch (event.key.keysym.sym) {
+                    sdl.SDL_EVENT_KEY_UP => {
+                        switch (event.key.key) {
                             sdl.SDLK_SPACE, sdl.SDLK_RIGHT, sdl.SDLK_DOWN, sdl.SDLK_RETURN => {
                                 if (self.file_index + 1 < self.files.len) {
                                     self.file_index += 1;
@@ -169,7 +167,7 @@ pub const ImageViewer = struct {
                                     repaint = true;
                                 }
                             },
-                            sdl.SDLK_q => {
+                            sdl.SDLK_Q => {
                                 quit = true;
                                 break;
                             },
@@ -189,15 +187,15 @@ pub const ImageViewer = struct {
                 } else {
                     render_height = window_height;
                 }
-                var render_quad = sdl.SDL_Rect{
-                    .x = @divTrunc(window_width - render_width, 2),
-                    .y = @divTrunc(window_height - render_height, 2),
-                    .w = render_width,
-                    .h = render_height,
+                var render_quad = sdl.SDL_FRect{
+                    .x = @floatFromInt(@divTrunc(window_width - render_width, 2)),
+                    .y = @floatFromInt(@divTrunc(window_height - render_height, 2)),
+                    .w = @floatFromInt(render_width),
+                    .h = @floatFromInt(render_height),
                 };
                 _ = sdl.SDL_RenderClear(self.renderer);
-                _ = sdl.SDL_RenderCopy(self.renderer, self.texture, null, &render_quad);
-                sdl.SDL_RenderPresent(self.renderer);
+                _ = sdl.SDL_RenderTexture(self.renderer, self.texture, null, &render_quad);
+                _ = sdl.SDL_RenderPresent(self.renderer);
             }
         }
     }
