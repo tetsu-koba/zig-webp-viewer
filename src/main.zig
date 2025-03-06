@@ -21,7 +21,7 @@ pub fn main() !void {
 
 pub const ImageViewer = struct {
     alc: std.mem.Allocator,
-    files: [][]const u8,
+    files: [][:0]u8,
     file_index: usize,
     window: ?*sdl.struct_SDL_Window,
     renderer: ?*sdl.struct_SDL_Renderer,
@@ -34,7 +34,7 @@ pub const ImageViewer = struct {
     screen_height: usize,
 
     const Self = @This();
-    pub fn init(alc: std.mem.Allocator, files: [][]const u8) !ImageViewer {
+    pub fn init(alc: std.mem.Allocator, files: [][:0]u8) !ImageViewer {
         var self: ImageViewer = .{
             .alc = alc,
             .files = files,
